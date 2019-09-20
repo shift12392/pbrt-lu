@@ -39,6 +39,18 @@
     <ClInclude Include="pbrt\pbrt.h">
       <Filter>pbrt</Filter>
     </ClInclude>
+    <ClInclude Include="pbrt\Core\Shape.h">
+      <Filter>pbrt\core</Filter>
+    </ClInclude>
+    <ClInclude Include="pbrt\Core\transform.h">
+      <Filter>pbrt\core</Filter>
+    </ClInclude>
+    <ClInclude Include="pbrt\Core\interaction.h">
+      <Filter>pbrt\core</Filter>
+    </ClInclude>
+    <ClInclude Include="pbrt\Core\medium.h">
+      <Filter>pbrt\core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -48,6 +60,18 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="pbrt\core\geometry.cpp">
+      <Filter>pbrt\core</Filter>
+    </ClCompile>
+    <ClCompile Include="pbrt\Core\Shape.cpp">
+      <Filter>pbrt\core</Filter>
+    </ClCompile>
+    <ClCompile Include="pbrt\Core\transform.cpp">
+      <Filter>pbrt\core</Filter>
+    </ClCompile>
+    <ClCompile Include="pbrt\Core\interaction.cpp">
+      <Filter>pbrt\core</Filter>
+    </ClCompile>
+    <ClCompile Include="pbrt\Core\medium.cpp">
       <Filter>pbrt\core</Filter>
     </ClCompile>
   </ItemGroup>

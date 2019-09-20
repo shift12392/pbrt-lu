@@ -3,12 +3,17 @@
 
 #include <cmath>
 #include <limits>
+#include <utility>
 
 #include "../pbrt.h"
 
 
 namespace pbrt
 {
+
+
+#define MachineEpsilon (std::numeric_limits<Float>::epsilon() * 0.5)
+
 
 	inline Float Lerp(Float t, Float v1, Float v2) { return (1 - t) * v1 + t * v2;}
 
@@ -21,6 +26,13 @@ namespace pbrt
 	template <>
 	inline bool isNaN(const int x) {
 		return false;
+	}
+
+
+
+
+	inline Float gamma(int n) {
+		return (n * MachineEpsilon) / (1 - n * MachineEpsilon);
 	}
 
 
@@ -563,6 +575,8 @@ namespace pbrt
 		// Normal3 Public Methods
 		Normal3() { x = y = z = 0; }
 		Normal3(T xx, T yy, T zz) : x(xx), y(yy), z(zz) { DCHECK(!HasNaNs()); }
+		explicit Normal3(const Vector3<T>& v) :x(v.x), y(v.y), z(v.z) { DCHECK(!HasNaNs()); }
+
 		Normal3<T> operator-() const { return Normal3(-x, -y, -z); }
 		Normal3<T> operator+(const Normal3<T> &n) const {
 			DCHECK(!n.HasNaNs());
@@ -637,9 +651,8 @@ namespace pbrt
 			return *this;
 		}
 #endif  // !NDEBUG
-		explicit Normal3<T>(const Vector3<T> &v) : x(v.x), y(v.y), z(v.z) {
-			DCHECK(!v.HasNaNs());
-		}
+
+
 		bool operator==(const Normal3<T> &n) const {
 			return x == n.x && y == n.y && z == n.z;
 		}
@@ -731,7 +744,241 @@ namespace pbrt
 			return Point2<T>(pbrt::Lerp(t.x, pMin.x, pMax.x), pbrt::Lerp(t.y, pMin.y, pMax.y));
 		}
 
+		//返回，点p位置，在框的长宽的比例
+		Vector2<T> Offset(const Point2<T> &p) const {
+			Vector2<T> o = p - pMin;
+			if (pMax.x > pMin.x) o.x /= pMax.x - pMin.x;
+			if (pMax.y > pMin.y) o.y /= pMax.y - pMin.y;
+			return o;
+		}
+
 
 	};
 
+	class Ray
+	{
+	public:
+		Point3f o;
+		Vector3f d;
+		mutable Float tMax;
+		Float time;
+
+		Ray() :tMax(std::numeric_limits<Float>::infinity()), time(0.f) {}
+		Ray(const Point3f &o, const Vector3f &d, Float tMax = std::numeric_limits<Float>::infinity(),
+			Float time = 0.f)
+			: o(o), d(d), tMax(tMax), time(time) {}
+
+		bool HasNaNs() const { return (o.HasNaNs() || d.HasNaNs() || isNaN(tMax)); }
+
+		Point3f operator() (Float t)
+		{
+			return o + d * t;
+		}
+
+	};
+
+	template <typename T>
+	class Bounds3 {
+	public:
+
+		// Bounds3 Public Data
+		Point3<T> pMin, pMax;
+
+
+		// Bounds3 Public Methods
+		Bounds3() {
+			T minNum = std::numeric_limits<T>::lowest();
+			T maxNum = std::numeric_limits<T>::max();
+			pMin = Point3<T>(maxNum, maxNum, maxNum);
+			pMax = Point3<T>(minNum, minNum, minNum);
+		}
+		explicit Bounds3(const Point3<T> &p) : pMin(p), pMax(p) {}
+		Bounds3(const Point3<T> &p1, const Point3<T> &p2)
+			: pMin(std::min(p1.x, p2.x), std::min(p1.y, p2.y),
+				std::min(p1.z, p2.z)),
+			pMax(std::max(p1.x, p2.x), std::max(p1.y, p2.y),
+				std::max(p1.z, p2.z)) {}
+
+		const Point3<T> &operator[](int i) const
+		{
+			DCHECK(i == 0 || i == 1);
+			return (i == 0) ? pMin : pMax;
+		}
+
+		Point3<T> &operator[](int i)
+		{
+			DCHECK(i == 0 || i == 1);
+			return (i == 0) ? pMin : pMax;
+		}
+
+		bool operator==(const Bounds3<T> &b) const {
+			return b.pMin == pMin && b.pMax == pMax;
+		}
+
+		bool operator!=(const Bounds3<T> &b) const {
+			return b.pMin != pMin || b.pMax != pMax;
+		}
+
+	    /* 
+		                 6---------------7(pMax) 
+                      -  -            -  -
+                  -      -         -     -
+				2---------------3        -
+				-        4- - - ---------5
+				-     -         -     -
+                - -             -  -    
+		        0(pMin)---------1      
+
+		 */
+
+		Point3<T> Corner(int corner) const {
+			DCHECK(corner >= 0 && corner < 8);
+			return Point3<T>((*this)[(corner & 1)].x,
+				(*this)[(corner & 2) ? 1 : 0].y,
+				(*this)[(corner & 4) ? 1 : 0].z);
+		}
+
+		//对角线
+		Vector3<T> Diagonal() const { return pMax - pMin; }
+
+		//表面积
+		T SurfaceArea() const {
+			Vector3<T> d = Diagonal();
+			return 2 * (d.x * d.y + d.x * d.z + d.y * d.z);
+		}
+
+		//体积
+		T Volume() const {
+			Vector3<T> d = Diagonal();
+			return d.x * d.y * d.z;
+		}
+
+		// 返回0，说明长（x）最大；返回1，说明高（y）最大； 返回2，说明宽（z）最大。
+		int MaximumExtent() const {
+			Vector3<T> d = Diagonal();
+			if (d.x > d.y && d.x > d.z)
+				return 0;
+			else if (d.y > d.z)
+				return 1;
+			else
+				return 2;
+		}
+
+		Point3<T> Lerp(const Point3f &t) const {
+			return Point3<T>(pbrt::Lerp(t.x, pMin.x, pMax.x),
+				pbrt::Lerp(t.y, pMin.y, pMax.y),
+				pbrt::Lerp(t.z, pMin.z, pMax.z));
+		}
+		Vector3<T> Offset(const Point3<T> &p) const {
+			Vector3<T> o = p - pMin;
+			if (pMax.x > pMin.x) o.x /= pMax.x - pMin.x;
+			if (pMax.y > pMin.y) o.y /= pMax.y - pMin.y;
+			if (pMax.z > pMin.z) o.z /= pMax.z - pMin.z;
+			return o;
+		}
+
+		//求射线与Box框的两个交点的t值。
+		/* x-y平面的情况,射线（o,d）在x-y平面投影，与平面x1,x2的相交的情况。
+		  
+
+                       |                |
+					   |                |      d
+					   |                |t2
+				o	   |t1              |
+		  -------------|----------------|------------------> x轴
+		               |（x1）          |(x2)
+		*/
+		//射线完全在包围框内，也返回true。
+		bool IntersectP(const Ray &ray, Float *hitt0 = nullptr,
+			Float *hitt1 = nullptr) const
+		{
+			Float t0 = 0.0, t1 = ray.tMax;
+			for (int i = 0; i < 3; i++)
+			{
+				// 如果ray.d[i]为0，光线平行于平面，则这个inv为无穷值。
+				Float inv = 1 / ray.d[i];
+
+			    // 如果射线原点在平面（比如：x1）内,同时平行平面（比如：x1）,则会出现0/0，根据IEEE 745浮点数标准，这会得到NaN。
+				Float tNear = (pMin[i] - ray.o[i]) * inv;   
+				Float tFar = (pMax[i] - ray.o[i]) * inv;
+
+				//NaN浮点数参与比较总会返回false。
+				if (tFar < tNear)
+				{   
+					std::swap(tNear, tFar);
+				}
+
+				tFar *= 1 + 2 * gamma(3);
+
+				// NaN浮点数参与比较总会返回false。
+				t0 = tNear > t0 ? tNear : t0;   
+				t1 = tFar < t1 ? tFar : t1;
+
+				if (t0 > t1)
+					return false;
+					
+			}
+
+			if (hitt0) *hitt0 = t0;
+			if (hitt1) *hitt1 = t1;
+
+			return true;
+		}
+
+	};
+
+
+	typedef Bounds2<Float> Bounds2f;
+	typedef Bounds2<int> Bounds2i;
+	typedef Bounds3<Float> Bounds3f;
+	typedef Bounds3<int> Bounds3i;
+
+
+
+
+
+
+	template <typename T>
+	Point3<T> Min(const Point3<T> &p1, const Point3<T> &p2)
+	{
+		return Point3<T>(fminf(p1.x, p2.x), fminf(p1.y, p2.y),
+			fminf(p1.z, p2.z));
+	}
+
+	template <typename T>
+	Point3<T> Max(const Point3<T> &p1, const Point3<T> &p2) {
+		return Point3<T>(fmaxf(p1.x, p2.x), fmaxf(p1.y, p2.y),
+			fmaxf(p1.z, p2.z));
+	}
+
+	template <typename T>
+	inline Vector3<T> Normalize(const Vector3<T> &v) {
+		return v / v.Length();
+	}
+
+	template <typename T>
+	inline Vector3<T> Cross(const Vector3<T> &v1, const Vector3<T> &v2) {
+		DCHECK(!v1.HasNaNs() && !v2.HasNaNs());
+
+		//这里强转为double，是为了避免catastrophic cancellation。
+		//对于两个接近的浮点小数 a, b，a - b 会比 a + b 造成更大的误差，这称为 catastrophic cancellation。
+		double v1x = v1.x, v1y = v1.y, v1z = v1.z;
+		double v2x = v2.x, v2y = v2.y, v2z = v2.z;
+		return Vector3<T>((v1y * v2z) - (v1z * v2y), (v1z * v2x) - (v1x * v2z),
+			(v1x * v2y) - (v1y * v2x));
+	}
+
+
+	template <typename T>
+	Bounds3<T> Union(const Bounds3<T> &b, const Point3<T> &p)
+	{
+		Bounds3<T> ret;
+		ret.pMin = Min(b.pMin, p);
+		ret.pMax = Max(b.pMax, p);
+		return ret;
+	}
+
 }
+
+
+

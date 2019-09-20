@@ -149,6 +149,10 @@
   <ItemGroup>
     <ClInclude Include="pbrt-lu.h" />
     <ClInclude Include="pbrt\core\geometry.h" />
+    <ClInclude Include="pbrt\Core\interaction.h" />
+    <ClInclude Include="pbrt\Core\medium.h" />
+    <ClInclude Include="pbrt\Core\Shape.h" />
+    <ClInclude Include="pbrt\Core\transform.h" />
     <ClInclude Include="pbrt\pbrt.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
@@ -157,6 +161,10 @@
   <ItemGroup>
     <ClCompile Include="pbrt-lu.cpp" />
     <ClCompile Include="pbrt\core\geometry.cpp" />
+    <ClCompile Include="pbrt\Core\interaction.cpp" />
+    <ClCompile Include="pbrt\Core\medium.cpp" />
+    <ClCompile Include="pbrt\Core\Shape.cpp" />
+    <ClCompile Include="pbrt\Core\transform.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
