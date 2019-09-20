@@ -35,6 +35,9 @@ namespace pbrt
 			return Intersect(ray, nullptr, nullptr, testAlphaTexture);
 		}
 
+
+		virtual Float Area() const = 0;
+
 	};
 }
 

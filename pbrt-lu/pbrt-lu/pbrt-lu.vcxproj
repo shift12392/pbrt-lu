@@ -154,6 +154,7 @@
     <ClInclude Include="pbrt\Core\Shape.h" />
     <ClInclude Include="pbrt\Core\transform.h" />
     <ClInclude Include="pbrt\pbrt.h" />
+    <ClInclude Include="pbrt\shapes\sphere.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -165,6 +166,7 @@
     <ClCompile Include="pbrt\Core\medium.cpp" />
     <ClCompile Include="pbrt\Core\Shape.cpp" />
     <ClCompile Include="pbrt\Core\transform.cpp" />
+    <ClCompile Include="pbrt\shapes\sphere.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

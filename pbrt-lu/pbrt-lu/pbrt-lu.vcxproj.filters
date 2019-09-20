@@ -19,6 +19,9 @@
     <Filter Include="pbrt\core">
       <UniqueIdentifier>{d9accf7b-a328-4b23-94d7-0a9d9f596e34}</UniqueIdentifier>
     </Filter>
+    <Filter Include="pbrt\shapes">
+      <UniqueIdentifier>{61949489-6a3c-49b4-b636-52a5e74ed79d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -51,6 +54,9 @@
     <ClInclude Include="pbrt\Core\medium.h">
       <Filter>pbrt\core</Filter>
     </ClInclude>
+    <ClInclude Include="pbrt\shapes\sphere.h">
+      <Filter>pbrt\shapes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -73,6 +79,9 @@
     </ClCompile>
     <ClCompile Include="pbrt\Core\medium.cpp">
       <Filter>pbrt\core</Filter>
+    </ClCompile>
+    <ClCompile Include="pbrt\shapes\sphere.cpp">
+      <Filter>pbrt\shapes</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

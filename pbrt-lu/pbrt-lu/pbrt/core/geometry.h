@@ -15,6 +15,9 @@ namespace pbrt
 #define MachineEpsilon (std::numeric_limits<Float>::epsilon() * 0.5)
 
 
+	static constexpr Float Pi = 3.14159265358979323846;
+
+
 	inline Float Lerp(Float t, Float v1, Float v2) { return (1 - t) * v1 + t * v2;}
 
 	template <typename T>
@@ -50,9 +53,27 @@ namespace pbrt
 
 
 	template <typename T>
-	Point3<T> Lerp(Float t, const Point3<T> &p0, const Point3<T> &p1) {
+	inline Point3<T> Lerp(Float t, const Point3<T> &p0, const Point3<T> &p1) {
 		return (1 - t) * p0 + t * p1;
 	}
+
+
+	template <typename T>
+	inline T Clamp(T value, T min, T max)
+	{
+		if (value < min)
+			return min;
+		else if (value > max)
+			return max;
+		else
+			return value;
+	}
+
+	// 度转弧度
+	inline Float Radians(Float deg) { return (Pi / 180) * deg; }
+
+	//弧度转度
+	inline Float Degrees(Float radians) { return (180 / Pi) * radians; }
 
 
 	template <typename T>
